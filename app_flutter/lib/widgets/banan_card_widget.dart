@@ -17,71 +17,57 @@ class BananCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 3 / 2,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 520),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: const LinearGradient(
+          colors: [Colors.white, Color(0xFFF7FBFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  'Banan Card',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: bananDark,
-                  ),
-                ),
-                Icon(Icons.fingerprint, color: bananGreen, size: 32),
+        border: Border.all(color: const Color(0xFFE6EEF6)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: Offset(0, 8))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: bananGreen.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.person, color: bananGreen, size: 36),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(fullName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                const SizedBox(height: 6),
+                Text('الهوية: $nationalId', style: const TextStyle(color: Colors.black54)),
+                const SizedBox(height: 4),
+                Text('رقم البصمة: $fingerprintNumber', style: const TextStyle(color: Colors.black54, fontSize: 12)),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              fullName,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text('National ID: $nationalId'),
-            const SizedBox(height: 4),
-            Text('Digital Fingerprint: $fingerprintNumber'),
-            const Spacer(),
-            const Text(
-              'Issue: 2025-11-27',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const Text(
-              'Expiry: 2030-11-27',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            if (isSaved) ...[
-              const SizedBox(height: 8),
-              Row(
+          ),
+          if (isSaved)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: bananGreen.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
+              child: Row(
                 children: const [
-                  Icon(Icons.check_circle, size: 16, color: bananGreen),
-                  SizedBox(width: 4),
-                  Text(
-                    'Saved on this device',
-                    style: TextStyle(fontSize: 12, color: bananGreen),
-                  ),
+                  Icon(Icons.check, color: bananGreen, size: 16),
+                  SizedBox(width: 6),
+                  Text('محفوظ', style: TextStyle(color: bananGreen, fontWeight: FontWeight.w700)),
                 ],
               ),
-            ],
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
