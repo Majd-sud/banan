@@ -33,7 +33,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
     if (_otpController.text.trim() == '1234') {
       if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(HomeScreen.routeName, (r) => false);
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(HomeScreen.routeName, (r) => false);
       }
     } else {
       setState(() {
@@ -64,16 +66,25 @@ class _OtpScreenState extends State<OtpScreen> {
               children: [
                 const SizedBox(height: 18),
                 Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 0,
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text('أرسلنا رمز تحقق إلى الهاتف المرتبط بالهوية:', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
+                        const Text(
+                          'أرسلنا رمز تحقق إلى الهاتف المرتبط بالهوية:',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.black54),
+                        ),
                         const SizedBox(height: 8),
-                        Text(id, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        Text(
+                          id,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ],
                     ),
                   ),
@@ -104,22 +115,33 @@ class _OtpScreenState extends State<OtpScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: bananGreen,
                     minimumSize: const Size.fromHeight(52),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: _loading
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text('تحقّق', style: TextStyle(fontSize: 16)),
                 ),
 
                 const SizedBox(height: 12),
                 TextButton(
-                  onPressed: _loading ? null : () {
-                    // demo: "resend" simply clear and show hint
-                    setState(() {
-                      _otpController.clear();
-                      _error = 'أعدنا إرسال الكود (تجريبي): استخدم 1234';
-                    });
-                  },
+                  onPressed: _loading
+                      ? null
+                      : () {
+                          // demo: "resend" simply clear and show hint
+                          setState(() {
+                            _otpController.clear();
+                            _error = 'أعدنا إرسال الكود (تجريبي): استخدم 1234';
+                          });
+                        },
                   child: const Text('إعادة إرسال الكود'),
                 ),
               ],

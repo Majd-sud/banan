@@ -1,9 +1,11 @@
-// ...existing code...
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme.dart';
 import '../widgets/banan_card_widget.dart';
 import 'card_screen.dart';
-import '../auth_flow/bottom_nav.dart';
+import '../providers/user_provider.dart';
+import '../widgets/bottom_navbar.dart';
+import '../widgets/banan_card_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   static const routeName = '/home';
@@ -12,21 +14,20 @@ class HomeScreen extends StatelessWidget {
   Future<void> _requestCard(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('تأكيد الطلب'),
-            content: const Text('هل تريد طلب نسخة رسمية من البطاقة؟'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('إلغاء'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('طلب'),
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الطلب'),
+        content: const Text('هل تريد طلب نسخة رسمية من البطاقة؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('إلغاء'),
           ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('طلب'),
+          ),
+        ],
+      ),
     );
     if (confirmed != true) return;
 
@@ -46,14 +47,23 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+
+    // Debug prints (اختياري)
+    if (user != null) {
+      print("🟢 [DEBUG] User data on HomeScreen: ${user.toJson()}");
+    } else {
+      print("⚠️ [DEBUG] No user data available.");
+    }
+
     final textStyle = Theme.of(context).textTheme;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xFFF6F8FB),
-        // ✅ Add this:
-        bottomNavigationBar: const AppBottomNav(),
+        bottomNavigationBar: const BottomCustomNavBar(),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -126,10 +136,9 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       GestureDetector(
-                        onTap:
-                            () => Navigator.of(
-                              context,
-                            ).pushNamed(CardScreen.routeName),
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pushNamed(CardScreen.routeName),
                         child: const BananCardWidget(
                           nationalId: '1234567890',
                           fullName: 'أحمد محمد',
@@ -144,10 +153,9 @@ class HomeScreen extends StatelessWidget {
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed:
-                                  () => Navigator.of(
-                                    context,
-                                  ).pushNamed(CardScreen.routeName),
+                              onPressed: () => Navigator.of(
+                                context,
+                              ).pushNamed(CardScreen.routeName),
                               icon: const Icon(Icons.visibility),
                               label: const Text('عرض البطاقة'),
                               style: ElevatedButton.styleFrom(
@@ -180,7 +188,7 @@ class HomeScreen extends StatelessWidget {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                side: BorderSide(color: bananGreen),
+                                side: const BorderSide(color: bananGreen),
                                 foregroundColor: bananGreen,
                               ),
                             ),
@@ -228,4 +236,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-// ...existing code...

@@ -1,12 +1,14 @@
-// ...existing code...
 import 'package:flutter/material.dart';
-import '../theme.dart';
-import '../main.dart'; // for AppState
-import 'otp_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import '../models/user.dart';
+import '../providers/user_provider.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
-
   const LoginScreen({super.key});
 
   @override
@@ -24,131 +26,150 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _mockNafathLogin() async {
-    setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 700));
-    AppState.nationalId = '1A23456789';
-    setState(() => _loading = false);
-    if (context.mounted) Navigator.of(context).pushNamed(OtpScreen.routeName);
-  }
-
-  void _submitManual() {
+  Future<void> _submitLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    AppState.nationalId = _idController.text.trim();
-    Navigator.of(context).pushNamed(OtpScreen.routeName);
+
+    final nationalId = _idController.text.trim();
+    setState(() => _loading = true);
+    print("🟢 [DEBUG] Entered National ID: $nationalId");
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/api/verify_national_id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'national_id': nationalId}),
+      );
+
+      setState(() => _loading = false);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print("✅ [DEBUG] Data received: $data");
+
+        if (data['status'] == 'found') {
+          final user = User.fromJson(data);
+          Provider.of<UserProvider>(context, listen: false).setUser(user);
+
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("المستخدم غير موجود.")));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Backend error: ${response.statusCode}")),
+        );
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Cannot reach backend: $e")));
+    }
   }
 
   @override
-  Widget build(BuildContext context) { 
-    // updated asset name
-    const assetLogo = '/assets/images/logo.png';
+  Widget build(BuildContext context) {
+    const logo = 'images/n_logo.png';
+    const primaryColor = Color(0xFF1B8354);
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white, 
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('تسجيل الدخول'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+          title: const Text(
+            'تسجيل الدخول',
+            style: TextStyle(color: Colors.white),
+          ),
           centerTitle: true,
+          backgroundColor: primaryColor,
+          elevation: 0,
         ),
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Column(
-                    children: [
-                      // use the provided transparent IAM_logo.png
-                      Image.asset(
-                        assetLogo,
-                        width: 180,
-                        height: 84,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.login, size: 72, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'سجّل دخولك عبر نفاذ للوصول إلى بطاقتك الرقمية والخدمات',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                    ],
-                  ),
-                ),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // شعار نفاذ أعلى الصفحة
+                  Image.asset(logo, width: 180, height: 84),
+                  const SizedBox(height: 40),
 
-                const SizedBox(height: 20),
-
-                ElevatedButton.icon(
-                  onPressed: _loading ? null : _mockNafathLogin,
-                  icon: _loading
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Image.asset(assetLogo, width: 22, height: 22, errorBuilder: (_, __, ___) => const Icon(Icons.login, size: 20, color: Colors.white)),
-                  label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text('تسجيل الدخول عبر نفاذ', style: TextStyle(fontSize: 16)),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: bananGreen, 
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-                const Center(child: Text('أو أدخل هويتك يدويًا', style: TextStyle(color: Colors.black54))),
-
-                const SizedBox(height: 12),
-
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TextFormField(
-                        controller: _idController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'الهوية الوطنية',
-                          hintText: '1XXXXXXXXX',
-                          filled: true,
-                          fillColor: Colors.white,
+                  // حقل إدخال الهوية الوطنية
+                  Form(
+                    key: _formKey,
+                    child: TextFormField(
+                      controller: _idController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'الهوية الوطنية',
+                        labelStyle: const TextStyle(color: Colors.grey),
+                        border: const OutlineInputBorder(),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'الرجاء إدخال رقم الهوية';
-                          }
-                          if (value.trim().length != 10) {
-                            return 'طول الهوية يجب أن يكون 10 أرقام.';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: _submitManual,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: bananGreen, 
-                          minimumSize: const Size.fromHeight(52),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                            color: Color(0xFF1B8354),
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('متابعة', style: TextStyle(fontSize: 16)),
                       ),
-                    ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال رقم الهوية';
+                        }
+                        if (value.length != 10) {
+                          return 'رقم الهوية يجب أن يكون 10 أرقام';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 25),
 
-                const Spacer(),
+                  // زر متابعة
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : _submitLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: _loading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "متابعة",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                    ),
+                  ),
 
-                const Text(
-                  'ملاحظة: لا يمكن استخدام التطبيق دون تسجيل هوية أو الدخول عبر نفاذ.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.black45, fontSize: 12),
-                ),
-              ],
+                  const SizedBox(height: 16),
+
+                  // النص أسفل الزر
+                  const Text(
+                    'سيتم تسجيل دخولك عبر نفاذ. بالضغط على زر متابعة، فإنك توافق على سياسة الشروط والأحكام.',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
